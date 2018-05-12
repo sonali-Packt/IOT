@@ -11,6 +11,16 @@
                 var date = new Date();
                 alive_second = date.getTime();
                 var keep_alive_data=this.responseText;
+                console.log(keep_alive_data)
+                //convert the string to JSON
+                var json_data=this.responseText;
+				var json_obj=JSON.parse(json_data);
+				if(json_obj.motion == 1){
+				     document.getElementById("motion_id").innerHTML = " Yes";
+				} else {
+				     document.getElementById("motion_id").innerHTML = " No";
+				}	                
+                           
                 }
             }
         }
