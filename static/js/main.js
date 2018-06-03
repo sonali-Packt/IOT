@@ -1,3 +1,30 @@
+    $(function(argument) {
+      $('[type="checkbox"]').bootstrapSwitch();
+	  $.fn.bootstrapSwitch.defaults.labelWidth = 400;
+    });
+
+	$('input').on('switchChange.bootstrapSwitch', function (event, state) {
+        console.log("EVENT>>>" , this.id, state);
+        var d_name = this.id;
+        var value = $(this).data(state ? 'onText' : 'offText');
+        console.log(this.id + ": " + value);
+        sendEvent(this.id + "-" + value);
+    })
+    
+       function sendEvent(value) {
+	    var request = new XMLHttpRequest();
+	    request.onreadystatechange = function(){
+	      if(this.readyState === 4){
+                if (this.status === 200) {
+                  if (this.responseText !== null) {
+					//document.getElementById("btn_stats").innerHTML = this.responseText;
+				   }
+                }
+	      }
+	    };
+	    request.open("POST", "status=" + value, true);
+        request.send(null);
+	  }	  	
 
   var alive_second = 0;
   var heartbeat_rate = 5000;

@@ -26,14 +26,19 @@ def beep(repeat):
       time.sleep(0.02)         # add a pause between each cycle
                   
 def motionDetection():
+	data["alarm"] = False
 	while True:
 	   if GPIO.input(PIR_pin):
 		  print("Motion detected!")
 		  beep(4)
 		  data["motion"] = 1
 	   else:
-		  data["motion"] = 0  
-	   time.sleep(1)  
+		  data["motion"] = 0 
+		  
+	   if data["alarm"]:	
+		  beep(2)		  
+
+	   time.sleep(1)  	   
 
 @app.route('/')
 def hello():
@@ -48,6 +53,18 @@ def keep_alive():
     parsed_json = json.dumps(data)
     print(parsed_json)
     return str(parsed_json)
+
+@app.route("/status=<name>-<action>", methods=['POST'])
+def event(name, action):
+    global data
+    print("got:" + name + ", action: " + action)
+    if name == "buzzer":
+	   if action == "ON":
+		  data["alarm"] = True
+	   elif action == "OFF":
+	      data["alarm"] = False   
+    return str("OK")
+		    		    
 
 if __name__ == '__main__':
 	sensorsThread = threading.Thread(target=motionDetection)
