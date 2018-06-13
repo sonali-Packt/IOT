@@ -52,15 +52,31 @@
         <div class="container-fluid">
             <div class="navbar-header">
                 <ul class="nav navbar-nav ">
-                    <li>
-                        <a href="#" onclick="logout();">
-                              <span class="glyphicon glyphicon-log-out" aria-hidden="true"></span>
-                        </a>
-                    </li>
+                    <!--<li>-->
+                        <tr>
+                         <th>
+                             <a href="#" onclick="logout();" class="navbar-brand page-scroll">
+                                <span class="glyphicon glyphicon-log-out"></span>
+                            </a>
+                         </th>
+                        <th>
+                            <a class="navbar-brand page-scroll">Connection:<span id="Connection_id">... </span></a>
+                        </th>
+                        <th>
+                            <a class="navbar-brand page-scroll" href="#page-top" id="user_name_id">
+                            <span>{% for message in get_flashed_messages() %}
+                                    {{ message }}
+                                  {% endfor %}
+                            </span>
+                            </a>
+                        </th>
+                        </tr>
+                    <!--</li>-->
 
-                    <li>
-                        <a>Connection:<span id="Connection_id">... </span></a>
-                    </li>
+                    <!--<li>-->
+                        <!--<a>Connection:<span id="Connection_id">... </span></a>-->
+
+                    <!--</li>-->
 
                 </ul>
             </div>
