@@ -97,3 +97,11 @@
 	  );
 
 	}
+
+	function logout(){
+	   	console.log('Logging out and unsubscribing');
+		pubnub.unsubscribe({
+			channels: [myChannel]
+		})
+	    location.replace("/logout");
+        }
