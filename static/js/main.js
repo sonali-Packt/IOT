@@ -6,17 +6,52 @@
     });
 
 	$('input').on('switchChange.bootstrapSwitch', function (event, state) {
-        console.log("EVENT>>>" , this.id, state);
-        var btnStatus = new Object();
-        //btnStatus[this.id] = $(this).data(state ? 'onText' : 'offText');
-        btnStatus[this.id] = state;
-        console.log(btnStatus);
+        //ID of all switch buttons that sends msg over PubNub channel starts with 'event'
+        if (this.id.startsWith("event")){
+            console.log("EVENT>>>" , this.id, state);
+            var btnStatus = new Object();
+            btnStatus[this.id.split("-")[1]] = state;
+            var event = new Object();
+            event.event = btnStatus;
+            publishUpdate(event, myChannel);
+        }
+    });
 
-        var event = new Object();
-        event.event = btnStatus;
-        //sendEvent(this.id + "-" + value);
-        publishUpdate(event, myChannel);
-    })
+  $("button").click(function() {
+       if (this.id.startsWith("access")){
+           var grantUserNameId = this.id.split("-")[1]
+           var read_state  = $('#read-' + grantUserNameId).bootstrapSwitch('state');
+           var write_state = $('#write-' + grantUserNameId).bootstrapSwitch('state');
+           sendEvent("grant-" + grantUserNameId + "-" + read_state + "-" + write_state);
+       }
+  });
+
+   function sendEvent(value) {
+    var request = new XMLHttpRequest();
+    request.onreadystatechange = function(){
+      if(this.readyState === 4){
+            if (this.status === 200) {
+              if (this.responseText !== null) {
+                try{
+                  var json_data = this.responseText;
+		  var json_obj = JSON.parse(json_data);
+                  if(json_obj.hasOwnProperty('access')){
+                     if (json_obj.access == "granted"){
+                         console.log("access-granted!")
+                         subscribe();
+                     }
+                  }
+                }catch (e){
+                  console.log("can't extract json: " + this.responseText);
+                }
+               }
+            }
+      }
+    };
+    console.log("sending ajax " + value)
+    request.open("POST", value, true);
+    request.send(null);
+  }
 
   var alive_second = 0;
   var heartbeat_rate = 5000;
@@ -66,7 +101,7 @@
         },
         message: function(message) {
         var msg = message.message;
-        if (msg.event){
+        if (msg.motion){
             $("#motion_id").text(msg.event["motion"]);
 
          }
@@ -77,9 +112,18 @@
         }
     })
 
-    pubnub.subscribe({
-        channels: [myChannel]
-    });
+	  function subscribe(){
+		pubnub.subscribe({
+			channels: [myChannel],
+		},
+		function (status, response) {
+			if (status.error) {
+				console.log( "Subscribed Failed ", status)
+			} else {
+				console.log("Subscribed Success ", status)
+			}
+		 });
+	  }
 
 
 	function publishUpdate(data, channel) {
@@ -87,13 +131,13 @@
 		channel: channel,
 		message: data
 	  },
-      function (status, response) {
-        if (status.error) {
-            console.log(status)
-        } else {
-            console.log("message Published w/ timetoken", response.timetoken)
-        }
-       }
+	      function (status, response) {
+		if (status.error) {
+		    console.log(status)
+		} else {
+		    console.log("message Published w/ timetoken", response.timetoken)
+		}
+	       }
 	  );
 
 	}

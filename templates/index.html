@@ -98,8 +98,34 @@
         
        <div class="jumbotron" style="background-image: url(https://thefoodiehub.com.au/wp-content/uploads/2012/08/black-background-wood-clean-by-freeman.jpg)">
 			<h3>Motion: <span id="motion_id"> </span> </h3>
-			<input type="checkbox" data-on-color="info" id="buzzer" data-on-text="ON" data-off-text="OFF">
+			<input type="checkbox" data-on-color="info" id="event-buzzer" data-on-text="ON" data-off-text="OFF">
 	   </div>
+
+        {% if user_id == "10214511884608981" %}
+        <div class="jumbotron" style="background-image: url(https://thefoodiehub.com.au/wp-content/uploads/2012/08/black-background-wood-clean-by-freeman.jpg)">
+            <div class="row">
+                <div class="center-block" style="width:600px;">
+                    <div class="panel panel-primary">
+                        <div class="panel-heading">Online users </div>
+                        <ul class="list-group">
+                            {%  for n in online_users["user_record"] %}
+                                <li class="list-group-item clearfix list-group-item-info" >
+                                  <div class="pull-left" >
+                                      <span> {{n[0]}} </span>
+                                  </div>
+                                  <div class="pull-right" >
+                                    <input class="checkbox-inline" type="checkbox" id="read-{{n[1]}}" data-on-text="yes" data-off-text="no" {{n[2]}}>
+                                    <input class="checkbox-inline" type="checkbox" id="write-{{n[1]}}" data-on-text="yes" data-off-text="no" {{n[3]}}>
+                                    <button type="button btn-primary" id="access-{{n[1]}}" class="btn btn-default "><i class="glyphicon glyphicon glyphicon-ok-circle"></i></button>
+                                  </div>
+                                </li>
+                             {% endfor  %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
     </section>
 
 </div>

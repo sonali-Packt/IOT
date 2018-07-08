@@ -83,7 +83,7 @@ def main():
     flash(session['user'])
     myDB.addUserAndLogin(session['user'], int(session['user_id']))
     myDB.viewAll()
-    return render_template('index.html')
+    return render_template('index.html', user_id=session['user_id'], online_users=myDB.getAllLoggedInUsers())
 
 
 @app.route('/keep_alive', methods=['GET'])
@@ -95,6 +95,18 @@ def keep_alive():
     parsed_json = json.dumps(data)
     print(parsed_json)
     return str(parsed_json)
+
+
+@app.route('/grant-<user_id>-<read>-<write>', methods=['POST', 'GET'])
+def grant_access(user_id, read, write):
+    if int(session['user_id']) == 10214511884608981:
+        print("granting " + user_id + " read:" + read + ", write:" + write + " permission")
+	#store user read/write permissions into database
+	#grant PubNub Read/Write access
+    else:
+        print("WHO ARE YOU ?")
+        return json.dumps({"access": "denied"})
+    return json.dumps({"access": "granted"})
 
 
 if __name__ == '__main__':
