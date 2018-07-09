@@ -2,7 +2,8 @@ from flask import Flask, render_template, redirect, url_for, session, flash
 from flask_dance.contrib.facebook import make_facebook_blueprint, facebook
 from functools import wraps
 from flask_sqlalchemy import SQLAlchemy
-import myDB
+import myDB, PB
+import hashlib, string, random
 
 import json, time
 
@@ -21,6 +22,9 @@ facebookSecret = "da8512c089189c459af393ab7df8e37b"
 
 facebook_blueprint = make_facebook_blueprint(client_id=facebookId, client_secret=facebookSecret)
 app.register_blueprint(facebook_blueprint, url_prefix='/facebook_login')
+
+# grant read and write permissions to authKey "raspberry-pi" forever!
+PB.grantAccess("raspberry-pi", True, True)
 
 
 @app.route('/facebook_login')
@@ -61,6 +65,25 @@ def clear_user_session():
     session['user_id'] = None
 
 
+def str_to_bool(s):
+    if 'true' in str(s):
+         return True
+    elif 'false' in str(s):
+         return False
+    else:
+         raise ValueError
+
+
+def salt(size=6, chars=string.ascii_uppercase + string.digits):
+    return ''.join(random.choice(chars) for _ in range(size))
+
+
+def createAuthKey():
+    s = salt(10)
+    hashing = hashlib.sha256(str(session['facebook_token']) + s)
+    return hashing.hexdigest()
+
+
 @app.route('/', methods=['POST', 'GET'])
 def login():
     clear_user_session()
@@ -80,6 +103,7 @@ def logout():
 @app.route('/main')
 @login_required
 def main():
+    session['keep_alive'] = 0
     flash(session['user'])
     myDB.addUserAndLogin(session['user'], int(session['user_id']))
     myDB.viewAll()
@@ -88,12 +112,11 @@ def main():
 
 @app.route('/keep_alive', methods=['GET'])
 def keep_alive():
-    global alive, data
-    alive += 1
-    keep_alive_count = str(alive)
-    data['keep_alive'] = keep_alive_count
+    global data
+    session['keep_alive'] += 1
+    data['keep_alive'] = str(session['keep_alive'])
     parsed_json = json.dumps(data)
-    print(parsed_json)
+    print(parsed_json + ", user:" + session["user"])
     return str(parsed_json)
 
 
@@ -101,12 +124,25 @@ def keep_alive():
 def grant_access(user_id, read, write):
     if int(session['user_id']) == 10214511884608981:
         print("granting " + user_id + " read:" + read + ", write:" + write + " permission")
-	#store user read/write permissions into database
-	#grant PubNub Read/Write access
+        myDB.addUserPermission(user_id, read, write)
+        auth_key = myDB.getAuthKey(user_id)
+        PB.grantAccess(auth_key, str_to_bool(read), str_to_bool(write))
     else:
         print("WHO ARE YOU ?")
         return json.dumps({"access": "denied"})
     return json.dumps({"access": "granted"})
+
+
+@app.route('/get_authKey', methods=['POST', 'GET'])
+def getAuthKey():
+    print("Creating AuthKey for " + session['user'])
+    auth_key = createAuthKey()
+    myDB.addAuthKey(int(session['user_id']), auth_key)
+    (read, write) = myDB.getUserAccess(int(session['user_id']))
+    PB.grantAccess(auth_key, read, write)
+    authResponse = {"authKey": auth_key, "cipherKey": PB.cipherKey}
+    jsonResponse = json.dumps(authResponse)
+    return str(jsonResponse)
 
 
 if __name__ == '__main__':

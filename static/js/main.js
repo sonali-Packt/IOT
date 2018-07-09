@@ -1,5 +1,8 @@
     var myChannel = "RSPY";
 
+    //Ask Server to give PubNub authorisation key
+    sendEvent("get_authKey");
+
     $(function(argument) {
       $('[type="checkbox"]').bootstrapSwitch();
 	  $.fn.bootstrapSwitch.defaults.labelWidth = 400;
@@ -35,6 +38,12 @@
                 try{
                   var json_data = this.responseText;
 		  var json_obj = JSON.parse(json_data);
+                  if(json_obj.hasOwnProperty('authKey')){
+                     pubnub.setAuthKey(json_obj.authKey);
+                     pubnub.setCipherKey(json_obj.cipherKey);
+                     console.log("Auth key set! " + this.responseText);
+                     subscribe();
+                  }
                   if(json_obj.hasOwnProperty('access')){
                      if (json_obj.access == "granted"){
                          console.log("access-granted!")
@@ -101,14 +110,9 @@
         },
         message: function(message) {
         var msg = message.message;
-        if (msg.motion){
-            $("#motion_id").text(msg.event["motion"]);
-
-         }
-        },
-
-        presence: function(presenceEvent) {
-            // handle presence
+            if (msg.motion){
+                $("#motion_id").text(msg.motion);
+            }
         }
     })
 
