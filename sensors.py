@@ -10,8 +10,8 @@ pnconfig = PNConfiguration()
 pnconfig.subscribe_key = 'sub-c-c96cd480-3528-11e8-a218-f214888d2de6'
 pnconfig.publish_key = 'pub-c-f141a42f-ae6d-4f11-bbaf-4bc7cb518b6c'
 ##########################
-pnconfig.cypherKey = "myCipherKey"
-pnconfig.auth_key = "raspberry-pi"
+pnconfig.cipher_key = 'myCipherKey'
+pnconfig.auth_key = 'raspberry-pi'
 pubnub = PubNub(pnconfig)
 
 myChannel = "RSPY"
@@ -41,8 +41,8 @@ def motionDetection():
     print("sensors started")
     trigger = False
     while True:
+        time.sleep(0.5) # give some rest to Raspberry Pi
         if GPIO.input(PIR_pin):
-            print("Motion detected!")
             beep(4)
             trigger = True
             publish(myChannel, {"motion": "Yes"})
@@ -94,17 +94,14 @@ class MySubscribeCallback(SubscribeCallback):
 
     def message(self, pubnub, message):
         global data
+        print(message.message)
         try:
-            print(message.message, ": ", type(message.message))
             msg = message.message
-            print("received json:", msg)
             key = list(msg.keys())
             if (key[0]) == "event":  # {"event": {"sensor_name": True } }
                 self.handleEvent(msg)
         except Exception  as e:
-            print("received:", message.message)
-            print(e)
-            pass
+            print("Receiving message: ", message.message)
 
     def handleEvent(self, msg):
         global data
