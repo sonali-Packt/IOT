@@ -71,16 +71,8 @@
                             </a>
                         </th>
                         </tr>
-                    <!--</li>-->
-
-                    <!--<li>-->
-                        <!--<a>Connection:<span id="Connection_id">... </span></a>-->
-
-                    <!--</li>-->
-
                 </ul>
             </div>
-
         </div>
     </nav>
 
@@ -114,9 +106,9 @@
                                       <span> {{n[0]}} </span>
                                   </div>
                                   <div class="pull-right" >
-                                    <input class="checkbox-inline" type="checkbox" id="read-{{n[1]}}" data-on-text="yes" data-off-text="no" {{n[2]}}>
-                                    <input class="checkbox-inline" type="checkbox" id="write-{{n[1]}}" data-on-text="yes" data-off-text="no" {{n[3]}}>
-                                    <button type="button btn-primary" id="access-{{n[1]}}" class="btn btn-default "><i class="glyphicon glyphicon glyphicon-ok-circle"></i></button>
+                                    <input class="checkbox-inline" type="checkbox" id="read-user-{{n[1]}}" data-on-text="yes" data-off-text="no" {{n[2]}}>
+                                    <input class="checkbox-inline" type="checkbox" id="write-user-{{n[1]}}" data-on-text="yes" data-off-text="no" {{n[3]}}>
+                                    <button type="button btn-primary" id="access-user-{{n[1]}}" class="btn btn-default "><i class="glyphicon glyphicon glyphicon-ok-circle"></i></button>
                                   </div>
                                 </li>
                              {% endfor  %}
@@ -124,6 +116,29 @@
                     </div>
                 </div>
             </div>
+
+            <div class="row">
+                <div class="center-block" style="width:600px;">
+                    <div class="panel panel-primary">
+                        <div class="panel-heading">Add New Device </div>
+                        <ul class="list-group">
+                                <li class="list-group-item clearfix list-group-item-info" >
+                                  <div class="pull-left" >
+                                    <div class="input-group">
+                                      <input type="text" class="form-control" placeholder="Auth key" id="device-auth-key">
+                                    </div>
+                                  </div>
+                                  <div class="pull-right" >
+                                    <input class="checkbox-inline" type="checkbox" id="read-device" data-on-text="yes" data-off-text="no" unchecked>
+                                    <input class="checkbox-inline" type="checkbox" id="write-device" data-on-text="yes" data-off-text="no" unchecked>
+                                    <button type="button btn-primary" id="access-device" class="btn btn-default "><i class="glyphicon glyphicon glyphicon-ok-circle"></i></button>
+                                  </div>
+                                </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
         </div>
         {% endif %}
     </section>

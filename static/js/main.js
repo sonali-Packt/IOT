@@ -21,11 +21,16 @@
     });
 
   $("button").click(function() {
-       if (this.id.startsWith("access")){
-           var grantUserNameId = this.id.split("-")[1]
-           var read_state  = $('#read-' + grantUserNameId).bootstrapSwitch('state');
-           var write_state = $('#write-' + grantUserNameId).bootstrapSwitch('state');
-           sendEvent("grant-" + grantUserNameId + "-" + read_state + "-" + write_state);
+       if (this.id.startsWith("access-user")){
+           var userId = this.id.split("-")[2];
+           var read_state  = $('#read-user-'  + userId).bootstrapSwitch('state');
+           var write_state = $('#write-user-' + userId).bootstrapSwitch('state');
+           sendEvent("grant-user-" + userId + "-" + read_state + "-" + write_state);
+       } else if (this.id.startsWith("access-device")){
+           var deviceAuthKey = $('#device-auth-key').val();
+           var read_state  = $('#read-device').bootstrapSwitch('state');
+           var write_state = $('#write-device').bootstrapSwitch('state');
+           sendEvent("grant-device-" + deviceAuthKey + "-" + read_state + "-" + write_state);
        }
   });
 
@@ -37,7 +42,7 @@
               if (this.responseText !== null) {
                 try{
                   var json_data = this.responseText;
-		  var json_obj = JSON.parse(json_data);
+		          var json_obj = JSON.parse(json_data);
                   if(json_obj.hasOwnProperty('authKey')){
                      pubnub.setAuthKey(json_obj.authKey);
                      pubnub.setCipherKey(json_obj.cipherKey);

@@ -120,13 +120,16 @@ def keep_alive():
     return str(parsed_json)
 
 
-@app.route('/grant-<user_id>-<read>-<write>', methods=['POST', 'GET'])
-def grant_access(user_id, read, write):
+@app.route('/grant-<who>-<keyOrId>-<read>-<write>', methods=['POST', 'GET'])
+def grant_access(who, keyOrId, read, write):
     if int(session['user_id']) == 10214511884608981:
-        print("granting " + user_id + " read:" + read + ", write:" + write + " permission")
-        myDB.addUserPermission(user_id, read, write)
-        auth_key = myDB.getAuthKey(user_id)
-        PB.grantAccess(auth_key, str_to_bool(read), str_to_bool(write))
+        if who == "user":
+            print("granting " + keyOrId + " read:" + read + ", write:" + write + " permission")
+            myDB.addUserPermission(keyOrId, read, write)
+            auth_key = myDB.getAuthKey(keyOrId)
+            PB.grantAccess(auth_key, str_to_bool(read), str_to_bool(write))
+        elif who == "device":
+            PB.grantAccess(keyOrId, str_to_bool(read), str_to_bool(write))
     else:
         print("WHO ARE YOU ?")
         return json.dumps({"access": "denied"})
