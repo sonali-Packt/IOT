@@ -9,6 +9,9 @@ pnconfig = PNConfiguration()
 
 pnconfig.subscribe_key = 'sub-c-c96cd480-3528-11e8-a218-f214888d2de6'
 pnconfig.publish_key = 'pub-c-f141a42f-ae6d-4f11-bbaf-4bc7cb518b6c'
+##########################
+pnconfig.cipher_key = 'myCipherKey'
+pnconfig.auth_key = 'raspberry-pi'
 pubnub = PubNub(pnconfig)
 
 myChannel = "RSPY"
@@ -23,36 +26,38 @@ GPIO.setup(PIR_pin, GPIO.IN)
 GPIO.setup(Buzzer_pin, GPIO.OUT)
 
 
-
 def beep(repeat):
-   for i in range(0, repeat):
-      for pulse in range(60):  # square wave loop
-         GPIO.output(Buzzer_pin, True)
-         time.sleep(0.001)     # high for 1 millisec
-         GPIO.output(Buzzer_pin, False)      
-         time.sleep(0.001)     # low for 1 millisec
-      time.sleep(0.02)         # add a pause between each cycle   
-                  
+    for i in range(0, repeat):
+        for pulse in range(60):  # square wave loop
+            GPIO.output(Buzzer_pin, True)
+            time.sleep(0.001)  # high for 1 millisec
+            GPIO.output(Buzzer_pin, False)
+            time.sleep(0.001)  # low for 1 millisec
+        time.sleep(0.02)  # add a pause between each cycle
+
+
 def motionDetection():
     data["alarm"] = False
     print("sensors started")
-    trigger = False    
+    trigger = False
     while True:
-       if GPIO.input(PIR_pin):
-          print("Motion detected!")
-          beep(4)
-          trigger = True
-          publish(myChannel, {"motion": "Yes"})
-          time.sleep(1)
-       elif trigger:
-		  publish(myChannel, {"motion": "No"})
-		  trigger = False   
-          
-       if data["alarm"]:
-		  beep(2)
-          
+        time.sleep(0.5) # give some rest to Raspberry Pi
+        if GPIO.input(PIR_pin):
+            beep(4)
+            trigger = True
+            publish(myChannel, {"motion": "Yes"})
+            time.sleep(1)
+        elif trigger:
+            publish(myChannel, {"motion": "No"})
+            trigger = False
+
+        if data["alarm"]:
+            beep(2)
+
+
 def publish(channel, msg):
-	pubnub.publish().channel(channel).message(msg).async(my_publish_callback)
+    pubnub.publish().channel(channel).message(msg).async(my_publish_callback)
+
 
 def my_publish_callback(envelope, status):
     # Check whether request successfully completed or not
@@ -76,7 +81,7 @@ class MySubscribeCallback(SubscribeCallback):
             # Connect event. You can do stuff like publish, and know you'll get it.
             # Or just use the connected event to confirm you are subscribed for
             # UI / internal notifications, etc
-            #send("")
+            # send("")
             pubnub.publish().channel(myChannel).message("Device connected!!").async(my_publish_callback)
         elif status.category == PNStatusCategory.PNReconnectedCategory:
             pass
@@ -89,31 +94,29 @@ class MySubscribeCallback(SubscribeCallback):
 
     def message(self, pubnub, message):
         global data
+        print(message.message)
         try:
-            print(message.message, ": ", type(message.message))
             msg = message.message
-            print("received json:", msg)
             key = list(msg.keys())
-            if (key[0]) == "event":    # {"event": {"sensor_name": True } }
+            if (key[0]) == "event":  # {"event": {"sensor_name": True } }
                 self.handleEvent(msg)
         except Exception  as e:
-            print("received:", message.message)
-            print(e)
-            pass
+            print("Receiving message: ", message.message)
 
     def handleEvent(self, msg):
         global data
         eventData = msg["event"]
         key = list(eventData.keys())
-        if key[0] in sensorsList:  
-           if eventData[key[0]] is True:
-			  data["alarm"] = True
-           elif	eventData[key[0]] is False:
-			  data["alarm"] = False      
+        if key[0] in sensorsList:
+            if eventData[key[0]] is True:
+                data["alarm"] = True
+            elif eventData[key[0]] is False:
+                data["alarm"] = False
+
 
 if __name__ == '__main__':
-	sensorsThread = threading.Thread(target=motionDetection)
-	sensorsThread.start()
+    sensorsThread = threading.Thread(target=motionDetection)
+    sensorsThread.start()
 
-	pubnub.add_listener(MySubscribeCallback())
-	pubnub.subscribe().channels(myChannel).execute()
+    pubnub.add_listener(MySubscribeCallback())
+    pubnub.subscribe().channels(myChannel).execute()
