@@ -32,6 +32,8 @@
     <!-- Theme Bootstrap switch -->
 	<link href="{{url_for('static', filename='css/bootstrap-switch.css') }}" rel="stylesheet">
 
+    <link type="text/css" rel="stylesheet" href="https://pubnub.github.io/eon/v/eon/1.0.0/eon.css"/>
+
     <link type="text/css" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap3-dialog/1.34.7/css/bootstrap-dialog.min.css"/>
 
 	<script src="static/js/modernizr.js"></script> <!-- Modernizr -->
@@ -89,8 +91,52 @@
         </div>
         
        <div class="jumbotron" style="background-image: url(https://thefoodiehub.com.au/wp-content/uploads/2012/08/black-background-wood-clean-by-freeman.jpg)">
-			<h3>Motion: <span id="motion_id"> </span> </h3>
-			<input type="checkbox" data-on-color="info" id="event-buzzer" data-on-text="ON" data-off-text="OFF">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-6 col-md-6 ">
+					<div class="panel panel-primary">
+					  <!-- Default panel contents -->
+					  <div class="panel-heading">Controls</div>
+                        <ul class="list-group">
+                           <li class="list-group-item clearfix list-group-item-info" >
+                              <div class="pull-left" >
+                                  <span>Motion </span>
+                              </div>
+                              <div class="pull-right" >
+                                  <span id="motion_id"> </span>
+                              </div>
+                           </li>
+                           <li class="list-group-item clearfix list-group-item-info" >
+                              <div class="pull-left" >
+                                  <span>Buzzer </span>
+                              </div>
+                              <div class="pull-right" >
+                                <input type="checkbox" data-on-color="info" id="event-buzzer" data-on-text="ON" data-off-text="OFF">
+                              </div>
+                           </li>
+                        </ul>
+					</div>
+					<div class="panel panel-primary">
+					  <!-- Default panel contents -->
+					  <div class="panel-heading">Light </div>
+						<div class="list-group-item  list-group-item-info" >
+							<div id="light_chart"></div>
+						</div>
+					  </div>
+                </div>
+                <div class="col-lg-6 col-md-6 ">
+					<div class="panel panel-primary">
+					  <!-- Default panel contents -->
+					  <div class="panel-heading">Atmosphere</div>
+					  <!-- List group -->
+						<div class="list-group-item  list-group-item-info" >
+							<div id="atmosphere_chart"></div>
+						</div>
+					  </div>
+                </div>
+            </div>
+        </div>
+
 	   </div>
 
         {% if user_id == "10214511884608981" %}
@@ -157,6 +203,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-easing/1.3/jquery.easing.min.js"></script>
     <script src="static/vendor/scrollreveal/scrollreveal.min.js"></script>
     <script src="static/vendor/magnific-popup/jquery.magnific-popup.min.js"></script>
+	<script type="text/javascript" src="https://pubnub.github.io/eon/v/eon/1.0.0/eon.js"></script>
 
     <!-- Theme JavaScript -->
     <script src="static/js/creative.min.js"></script>

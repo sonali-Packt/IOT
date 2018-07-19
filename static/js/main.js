@@ -158,3 +158,93 @@
 		})
 	    location.replace("/logout");
         }
+
+    var __eon_cols = ["tempC","tempF","hum"];
+    var __eon_labels = {};
+    chart = eon.chart({
+      pubnub: pubnub,
+      channels: [myChannel],
+      history: false,
+      flow: true,
+      rate: 1000,
+      limit: 50,
+      generate: {
+        bindto: "#atmosphere_chart",
+        data: {
+          colors: {"tempC":"#D70060","tempF":"#E54028","hum":"#F18D05"},
+          type: "spline"
+        },
+        transition: {
+          duration: 250
+        },
+        axis: {
+          x: {
+            label: ""
+          },
+          y: {
+            label: ""
+          }
+        },
+        grid: {
+          x: {
+            show: false
+          },
+          y: {
+            show: false
+          }
+        },
+        tooltip: {
+         show: true
+        },
+        point: {
+          show: false
+        }
+      },
+      transform: function(message) {
+        var msg = JSON.stringify(message);
+        var json_data = JSON.parse(msg);
+        if(json_data.hasOwnProperty('atmos')){
+            var message = eon.c.flatten(message.atmos);
+            var o = {};
+            for(index in message) {
+              if(__eon_cols.indexOf(index) > -1){
+                o[__eon_labels[index] || index] = message[index];
+              }
+             }
+            return {
+              eon: o
+            };
+       }
+      }
+    });
+
+
+	eon.chart({
+	  pubnub: pubnub,
+	  channels: [myChannel],
+	  generate: {
+		bindto: '#light_chart',
+		data: {
+		  type: 'gauge',
+		},
+		gauge: {
+		  min: 0,
+		  max: 100
+		},
+		color: {
+		  pattern: ['#2eff00', '#ffee00', '#ff1900'],
+		  threshold: {
+			values: [30, 50, 70]
+		  }
+		}
+	  },
+	  transform: function(m) {
+		var msg = JSON.stringify(m);
+        var json_data = JSON.parse(msg);
+        if(json_data.hasOwnProperty('light')){
+			return { eon: {
+			  light: json_data.light
+			}}
+		}
+	  }
+	});
