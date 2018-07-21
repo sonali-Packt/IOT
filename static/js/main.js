@@ -102,8 +102,8 @@
 
     pubnub = new PubNub({
       publish_key: 'pub-c-f141a42f-ae6d-4f11-bbaf-4bc7cb518b6c',
-      subscribe_key: 'sub-c-c96cd480-3528-11e8-a218-f214888d2de6'
-
+      subscribe_key: 'sub-c-c96cd480-3528-11e8-a218-f214888d2de6',
+      ssl: true
     });
 
 
