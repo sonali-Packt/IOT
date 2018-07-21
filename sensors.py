@@ -13,11 +13,13 @@ pnconfig.publish_key = 'pub-c-f141a42f-ae6d-4f11-bbaf-4bc7cb518b6c'
 ##########################
 pnconfig.cipher_key = 'myCipherKey'
 pnconfig.auth_key = 'raspberry-pi'
+pnconfig.ssl = True
 pubnub = PubNub(pnconfig)
 
 myChannel = "RSPY"
 PIR_pin = 23
 Buzzer_pin = 24
+LED = 18
 dht11_pin = 5
 sensorsList = ["buzzer"]
 data = {}
@@ -28,12 +30,14 @@ GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(PIR_pin, GPIO.IN)
 GPIO.setup(Buzzer_pin, GPIO.OUT)
+GPIO.setup(LED, GPIO.OUT)
 
 # Open SPI bus
 spi = spidev.SpiDev()
 spi.open(0,0)
 spi.max_speed_hz=1000000
 
+# scales the given range into desired range
 # https://stackoverflow.com/a/23157705/5167801
 def scale(valueIn, baseMin, baseMax, limitMin, limitMax):
         return ((limitMax - limitMin) * (valueIn - baseMin) / (baseMax - baseMin)) + limitMin
@@ -44,7 +48,12 @@ def scale(valueIn, baseMin, baseMax, limitMin, limitMax):
 def ReadChannel(channel):
   adc = spi.xfer2([1,(8+channel)<<4,0])
   data = ((adc[1]&3) << 8) + adc[2]
-  return scale(data, 10, 700, 0, 100)
+  scaled = scale(data, 10, 700, 0, 100)
+  if (scaled <= 40):
+	  GPIO.output(LED, True)
+  else:
+	  GPIO.output(LED, False)
+  return scaled
 
 
 def my_publish_callback(envelope, status):
@@ -52,7 +61,7 @@ def my_publish_callback(envelope, status):
     if not status.is_error():
         pass  # Message successfully published to specified channel.
     else:
-		print("Unable to send message:", e)
+		print("Unable to send message:", status.error_data.information)
 
 
 def publish(channel, msg):
