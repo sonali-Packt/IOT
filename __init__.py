@@ -2,7 +2,7 @@ from flask import Flask, render_template, redirect, url_for, session, flash
 from flask_dance.contrib.facebook import make_facebook_blueprint, facebook
 from functools import wraps
 from flask_sqlalchemy import SQLAlchemy
-import myDB, PB
+import myDB, myPB
 import hashlib, string, random
 
 import json, time
@@ -23,8 +23,8 @@ facebookSecret = "da8512c089189c459af393ab7df8e37b"
 facebook_blueprint = make_facebook_blueprint(client_id=facebookId, client_secret=facebookSecret)
 app.register_blueprint(facebook_blueprint, url_prefix='/facebook_login')
 
-# grant read and write permissions to authKey "raspberry-pi" forever!
-PB.grantAccess("raspberry-pi", True, True)
+# grant read and write permissions to authKey "raspberry-pi"
+myPB.grantAccess("raspberry-pi", True, True)
 
 
 @app.route('/facebook_login')
@@ -127,9 +127,9 @@ def grant_access(who, keyOrId, read, write):
             print("granting " + keyOrId + " read:" + read + ", write:" + write + " permission")
             myDB.addUserPermission(keyOrId, read, write)
             auth_key = myDB.getAuthKey(keyOrId)
-            PB.grantAccess(auth_key, str_to_bool(read), str_to_bool(write))
+            myPB.grantAccess(auth_key, str_to_bool(read), str_to_bool(write))
         elif who == "device":
-            PB.grantAccess(keyOrId, str_to_bool(read), str_to_bool(write))
+            myPB.grantAccess(keyOrId, str_to_bool(read), str_to_bool(write))
     else:
         print("WHO ARE YOU ?")
         return json.dumps({"access": "denied"})
@@ -142,8 +142,8 @@ def getAuthKey():
     auth_key = createAuthKey()
     myDB.addAuthKey(int(session['user_id']), auth_key)
     (read, write) = myDB.getUserAccess(int(session['user_id']))
-    PB.grantAccess(auth_key, read, write)
-    authResponse = {"authKey": auth_key, "cipherKey": PB.cipherKey}
+    myPB.grantAccess(auth_key, read, write)
+    authResponse = {"authKey": auth_key, "cipherKey": myPB.cipherKey}
     jsonResponse = json.dumps(authResponse)
     return str(jsonResponse)
 

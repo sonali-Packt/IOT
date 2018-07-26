@@ -1,5 +1,6 @@
 import RPi.GPIO as GPIO
-import time, threading
+import Adafruit_DHT
+import time, threading, spidev
 from pubnub.callbacks import SubscribeCallback
 from pubnub.enums import PNStatusCategory
 from pubnub.pnconfiguration import PNConfiguration
@@ -12,18 +13,59 @@ pnconfig.publish_key = 'pub-c-f141a42f-ae6d-4f11-bbaf-4bc7cb518b6c'
 ##########################
 pnconfig.cipher_key = 'myCipherKey'
 pnconfig.auth_key = 'raspberry-pi'
+pnconfig.ssl = True
 pubnub = PubNub(pnconfig)
 
 myChannel = "RSPY"
 PIR_pin = 23
 Buzzer_pin = 24
+LED = 18
+dht11_pin = 5
 sensorsList = ["buzzer"]
 data = {}
+# Define MCP3008 channels
+light_channel = 0
 
 GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(PIR_pin, GPIO.IN)
 GPIO.setup(Buzzer_pin, GPIO.OUT)
+GPIO.setup(LED, GPIO.OUT)
+
+# Open SPI bus
+spi = spidev.SpiDev()
+spi.open(0,0)
+spi.max_speed_hz=1000000
+
+# scales the given range into desired range
+# https://stackoverflow.com/a/23157705/5167801
+def scale(valueIn, baseMin, baseMax, limitMin, limitMax):
+        return ((limitMax - limitMin) * (valueIn - baseMin) / (baseMax - baseMin)) + limitMin
+
+
+# Function to read SPI data from MCP3008 chip
+# Channel must be an integer 0-7
+def ReadChannel(channel):
+  adc = spi.xfer2([1,(8+channel)<<4,0])
+  data = ((adc[1]&3) << 8) + adc[2]
+  scaled = scale(data, 10, 700, 0, 100)
+  if (scaled <= 40):
+	  GPIO.output(LED, True)
+  else:
+	  GPIO.output(LED, False)
+  return scaled
+
+
+def my_publish_callback(envelope, status):
+    # Check whether request successfully completed or not
+    if not status.is_error():
+        pass  # Message successfully published to specified channel.
+    else:
+		print("Unable to send message:", status.error_data.information)
+
+
+def publish(channel, msg):
+    pubnub.publish().channel(channel).message(msg).async(my_publish_callback)
 
 
 def beep(repeat):
@@ -41,12 +83,14 @@ def motionDetection():
     print("sensors started")
     trigger = False
     while True:
-        time.sleep(0.5) # give some rest to Raspberry Pi
+        publish(myChannel, {"light": str(ReadChannel(light_channel))})
+        time.sleep(1) # give some rest to Raspberry Pi
         if GPIO.input(PIR_pin):
             beep(4)
             trigger = True
             publish(myChannel, {"motion": "Yes"})
-            time.sleep(1)
+            print('motion detected!')
+            time.sleep(0.5)
         elif trigger:
             publish(myChannel, {"motion": "No"})
             trigger = False
@@ -54,20 +98,11 @@ def motionDetection():
         if data["alarm"]:
             beep(2)
 
-
-def publish(channel, msg):
-    pubnub.publish().channel(channel).message(msg).async(my_publish_callback)
-
-
-def my_publish_callback(envelope, status):
-    # Check whether request successfully completed or not
-    if not status.is_error():
-        pass  # Message successfully published to specified channel.
-    else:
-        pass  # Handle message publish error. Check 'category' property to find out possible issue
-        # because of which request did fail.
-        # Request can be resent using: [status retry];
-
+def readDht11():
+	while True:
+		hum, tempC = Adafruit_DHT.read_retry(11, dht11_pin)
+		tempF = tempC * 9/5.0 + 32
+		publish(myChannel, {"atmos": {"tempC": str(tempC), "tempF": str(tempF), "hum": hum}})
 
 class MySubscribeCallback(SubscribeCallback):
     def presence(self, pubnub, presence):
@@ -82,7 +117,7 @@ class MySubscribeCallback(SubscribeCallback):
             # Or just use the connected event to confirm you are subscribed for
             # UI / internal notifications, etc
             # send("")
-            pubnub.publish().channel(myChannel).message("Device connected!!").async(my_publish_callback)
+            publish(myChannel, "Device connected!!")
         elif status.category == PNStatusCategory.PNReconnectedCategory:
             pass
             # Happens as part of our regular operation. This event happens when
@@ -115,8 +150,12 @@ class MySubscribeCallback(SubscribeCallback):
 
 
 if __name__ == '__main__':
+    pubnub.add_listener(MySubscribeCallback())
+    pubnub.subscribe().channels(myChannel).execute()
+
+    time.sleep(3)
     sensorsThread = threading.Thread(target=motionDetection)
     sensorsThread.start()
 
-    pubnub.add_listener(MySubscribeCallback())
-    pubnub.subscribe().channels(myChannel).execute()
+    dhtThread = threading.Thread(target=readDht11)
+    dhtThread.start()

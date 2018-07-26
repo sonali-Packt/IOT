@@ -13,6 +13,7 @@ pnconfig.publish_key = 'pub-c-f141a42f-ae6d-4f11-bbaf-4bc7cb518b6c'
 pnconfig.secret_key = "sec-c-YzhiNDQ0ZDEtODNmMS00M2NmLTgwMDktZmNlYjgzMDJkYjE5"
 pnconfig.uuid = server_UUID
 pnconfig.cipher_key = cipherKey
+pnconfig.ssl = True
 pubnub = PubNub(pnconfig)
 
 
